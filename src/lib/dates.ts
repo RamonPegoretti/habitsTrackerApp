@@ -49,3 +49,8 @@ export function monthName(year: number, month: number): string {
 export function shortDate(key: string): string {
   return fromKey(key).toLocaleString('en', { month: 'short', day: 'numeric' })
 }
+
+/** Link to a day on the Today page (today itself has no date in the link). */
+export function dayHref(key: string): string {
+  return key === todayKey() ? '#/today' : `#/today?d=${key}`
+}

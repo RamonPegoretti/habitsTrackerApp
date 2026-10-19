@@ -3,6 +3,9 @@ import type { DayDoc, Habit, Task } from './types'
 
 export const XP = { habit: 10, big: 30, task: 10 } as const
 
+/** Earliest day that can be filled in; habits can count back to here. */
+export const HISTORY_START = '2026-10-01'
+
 export type HabitStatus = 'off' | 'done' | 'excused' | 'missed' | 'pending'
 
 export interface DaySummary {

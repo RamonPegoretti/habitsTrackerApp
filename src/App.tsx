@@ -17,22 +17,21 @@ const ROUTES = [
 
 type Route = (typeof ROUTES)[number]['id']
 
-function useRoute(): Route {
-  const read = () => {
-    const id = location.hash.replace('#/', '')
-    return (ROUTES.find((r) => r.id === id)?.id ?? 'today') as Route
-  }
-  const [route, setRoute] = useState(read)
+function useRoute(): { route: Route; day: string | null } {
+  const [hash, setHash] = useState(location.hash)
   useEffect(() => {
-    const on = () => setRoute(read())
+    const on = () => setHash(location.hash)
     addEventListener('hashchange', on)
     return () => removeEventListener('hashchange', on)
   }, [])
-  return route
+  // e.g. #/today?d=2026-10-15
+  const [path, query = ''] = hash.replace('#/', '').split('?')
+  const route = (ROUTES.find((r) => r.id === path)?.id ?? 'today') as Route
+  return { route, day: new URLSearchParams(query).get('d') }
 }
 
 function Shell() {
-  const route = useRoute()
+  const { route, day } = useRoute()
   const { ready } = useData()
   const { user, logOut } = useAuth()
 
@@ -77,7 +76,7 @@ function Shell() {
         {!ready ? (
           <div className="py-20 text-center text-muted">Loading…</div>
         ) : route === 'today' ? (
-          <TodayView />
+          <TodayView day={day} />
         ) : route === 'week' ? (
           <WeekView />
         ) : route === 'month' ? (

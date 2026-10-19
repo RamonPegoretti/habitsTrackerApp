@@ -1,7 +1,7 @@
 import { Fragment, useEffect, useRef, useState } from 'react'
 import { useData } from '../lib/data'
-import { WEEKDAY_SHORT, fromKey, monthKeys, monthName, todayKey, weekday } from '../lib/dates'
-import { bestRun, countPerfect, isScheduled, summarizeDay } from '../lib/scoring'
+import { WEEKDAY_SHORT, dayHref, fromKey, monthKeys, monthName, todayKey, weekday } from '../lib/dates'
+import { HISTORY_START, bestRun, countPerfect, isScheduled, summarizeDay } from '../lib/scoring'
 import { AreaChart, Check, NavArrows, Ring, StatCard, WEEK_COLORS } from '../components/ui'
 import { LevelBar } from '../components/LevelBar'
 
@@ -78,17 +78,33 @@ export function MonthView() {
             >
               <div className="text-[11px] font-bold">Week {wi + 1}</div>
               <div className="grid" style={{ gridTemplateColumns: `repeat(${w.length}, 1fr)` }}>
-                {w.map((k) => (
-                  <div key={k} className="text-[9px] leading-tight font-semibold">
-                    <div className="opacity-70">{WEEKDAY_SHORT[weekday(k)]}</div>
-                    <div
-                      className={k === today ? 'mx-auto w-4 rounded-full bg-[#0b0d2a] text-white' : ''}
-                      data-today={k === today || undefined}
+                {w.map((k) => {
+                  const inner = (
+                    <>
+                      <div className="opacity-70">{WEEKDAY_SHORT[weekday(k)]}</div>
+                      <div
+                        className={k === today ? 'mx-auto w-4 rounded-full bg-[#0b0d2a] text-white' : ''}
+                        data-today={k === today || undefined}
+                      >
+                        {fromKey(k).getDate()}
+                      </div>
+                    </>
+                  )
+                  return k <= today && k >= HISTORY_START ? (
+                    <a
+                      key={k}
+                      href={dayHref(k)}
+                      className="block text-[9px] leading-tight font-semibold hover:underline"
+                      title="Open this day"
                     >
-                      {fromKey(k).getDate()}
+                      {inner}
+                    </a>
+                  ) : (
+                    <div key={k} className="text-[9px] leading-tight font-semibold">
+                      {inner}
                     </div>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             </div>
           ))}
@@ -140,7 +156,9 @@ export function MonthView() {
           })}
 
           {/* Progress chart */}
-          <div className="sticky left-0 z-10 pl-3 sm:pl-4 flex items-center bg-panel text-[10px] uppercase tracking-widest text-muted">Progress</div>
+          <div className="sticky left-0 z-10 pl-3 sm:pl-4 flex items-center bg-panel text-[10px] uppercase tracking-widest text-muted">
+            Progress
+          </div>
           <div style={{ gridColumn: `span ${keys.length}`, width: `${(upToToday.length / keys.length) * 100}%` }}>
             <AreaChart values={upToToday.map((s) => s.pct)} color="#22d3ee" height={80} />
           </div>

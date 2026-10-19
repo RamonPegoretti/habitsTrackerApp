@@ -1,19 +1,23 @@
 import { useState } from 'react'
 import { useData } from '../lib/data'
-import { WEEKDAY_LONG, shortDate, todayKey, weekday } from '../lib/dates'
-import { XP, summarizeDay } from '../lib/scoring'
+import { WEEKDAY_LONG, addDays, dayHref, shortDate, todayKey, weekday } from '../lib/dates'
+import { HISTORY_START, XP, summarizeDay } from '../lib/scoring'
 import { buildCoachText } from '../lib/coach'
 import { Check, DAY_COLORS, Ring } from '../components/ui'
 import { TaskList } from '../components/TaskList'
 import { useProgress } from '../components/LevelBar'
 
-export function TodayView() {
-  const { habits, allHabits, days, tasks, toggleCheck } = useData()
+export function TodayView({ day }: { day: string | null }) {
+  const { allHabits, days, tasks, toggleCheck } = useData()
   const progress = useProgress()
   const today = todayKey()
-  const color = DAY_COLORS[weekday(today)]
-  const summary = summarizeDay(habits, today, days, today)
-  const scheduled = habits.filter((h) => summary.statuses[h.id] !== 'off')
+  // Only today and past days back to HISTORY_START can be opened.
+  const key = day && /^\d{4}-\d{2}-\d{2}$/.test(day) && day < today && day >= HISTORY_START ? day : today
+  const isToday = key === today
+  const color = DAY_COLORS[weekday(key)]
+  const summary = summarizeDay(allHabits, key, days, today)
+  const scheduled = allHabits.filter((h) => summary.statuses[h.id] !== 'off')
+  const go = (k: string) => (location.hash = dayHref(k))
 
   const [copied, setCopied] = useState<'idle' | 'ok' | 'fail'>('idle')
 
@@ -32,8 +36,34 @@ export function TodayView() {
     <div className="space-y-4">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <div className="text-xs uppercase tracking-widest text-muted">{shortDate(today)}</div>
-          <h1 className="text-3xl font-bold">{WEEKDAY_LONG[weekday(today)]}</h1>
+          <div className="text-xs uppercase tracking-widest text-muted">
+            {shortDate(key)}
+            {!isToday && ' · past day'}
+          </div>
+          <h1 className="text-3xl font-bold">{WEEKDAY_LONG[weekday(key)]}</h1>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            className="btn-ghost px-3 disabled:opacity-30"
+            onClick={() => go(addDays(key, -1))}
+            disabled={key <= HISTORY_START}
+            aria-label="Previous day"
+          >
+            ‹
+          </button>
+          <button
+            className="btn-ghost px-3 disabled:opacity-30"
+            onClick={() => go(addDays(key, 1))}
+            disabled={isToday}
+            aria-label="Next day"
+          >
+            ›
+          </button>
+          {!isToday && (
+            <button className="btn-ghost text-sm" onClick={() => go(today)}>
+              Back to today
+            </button>
+          )}
         </div>
         <button className="btn flex items-center gap-2" onClick={copy}>
           {copied === 'ok' ? '✓ Copied, paste it into Claude' : copied === 'fail' ? 'Copy failed, try again' : '📋 Copy for Claude'}
@@ -52,7 +82,7 @@ export function TodayView() {
               </div>
             </Ring>
             <div>
-              <h2 className="text-lg font-semibold">Today's habits</h2>
+              <h2 className="text-lg font-semibold">{isToday ? "Today's habits" : 'Habits'}</h2>
               <p className="text-sm text-muted">+{XP.habit} XP each</p>
             </div>
           </div>
@@ -62,7 +92,7 @@ export function TodayView() {
               return (
                 <li key={h.id}>
                   <button
-                    onClick={() => toggleCheck(today, h.id)}
+                    onClick={() => toggleCheck(key, h.id)}
                     className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition"
                     style={{
                       background: s === 'done' ? `${color}22` : '#ffffff08',
@@ -76,18 +106,18 @@ export function TodayView() {
                 </li>
               )
             })}
-            {scheduled.length === 0 && <li className="text-sm text-muted">Nothing scheduled today. Rest day.</li>}
+            {scheduled.length === 0 && <li className="text-sm text-muted">Nothing scheduled. Rest day.</li>}
           </ul>
         </section>
 
         <section className="panel space-y-4 p-4">
-          <TaskList dayKey={today} big color={color} />
-          <TaskList dayKey={today} big={false} color={color} />
+          <TaskList dayKey={key} big color={color} />
+          <TaskList dayKey={key} big={false} color={color} />
         </section>
       </div>
 
       {/* Remount once the saved entry arrives (e.g. written on another device). */}
-      <JournalCard key={days[today]?.journal ? 'loaded' : 'empty'} dayKey={today} />
+      <JournalCard key={`${key}-${days[key]?.journal ? 'loaded' : 'empty'}`} dayKey={key} />
     </div>
   )
 }
