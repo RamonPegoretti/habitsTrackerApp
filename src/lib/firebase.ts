@@ -4,16 +4,19 @@ import { connectFirestoreEmulator, initializeFirestore, persistentLocalCache } f
 
 const env = import.meta.env
 
-export const firebaseConfigured = Boolean(env.VITE_FIREBASE_API_KEY && env.VITE_FIREBASE_PROJECT_ID)
+// Firebase web config is public by design (access is enforced by firestore.rules); env vars can override it.
+const config = {
+  apiKey: env.VITE_FIREBASE_API_KEY || 'AIzaSyBGcYEsqZrEFoaquuUUdUCmJI6Q1rsTOaI',
+  authDomain: env.VITE_FIREBASE_AUTH_DOMAIN || 'streakboard-de8fa.firebaseapp.com',
+  projectId: env.VITE_FIREBASE_PROJECT_ID || 'streakboard-de8fa',
+  storageBucket: env.VITE_FIREBASE_STORAGE_BUCKET || 'streakboard-de8fa.firebasestorage.app',
+  messagingSenderId: env.VITE_FIREBASE_MESSAGING_SENDER_ID || '212838972432',
+  appId: env.VITE_FIREBASE_APP_ID || '1:212838972432:web:0ef81d122063dc19fc5e95',
+}
 
-const app = initializeApp({
-  apiKey: env.VITE_FIREBASE_API_KEY || 'missing',
-  authDomain: env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: env.VITE_FIREBASE_PROJECT_ID || 'demo-streakboard',
-  storageBucket: env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: env.VITE_FIREBASE_APP_ID,
-})
+export const firebaseConfigured = Boolean(config.apiKey && config.projectId)
+
+const app = initializeApp(config)
 
 export const auth = getAuth(app)
 // Offline cache so the app opens instantly on the phone and syncs when back online.

@@ -18,7 +18,7 @@ Stack: React + TypeScript + Vite, Tailwind CSS, Firebase (Auth + Firestore), ins
 ## Setup
 
 1. Create a Firebase project with **Authentication → Email/Password** and **Firestore** enabled.
-2. Copy `.env.example` to `.env` and fill in the web app config.
+2. The web app config for `streakboard-de8fa` is built into `src/lib/firebase.ts` (it's public by design). To point at another project, copy `.env.example` to `.env` and fill it in.
 3. Paste `firestore.rules` into **Firestore → Rules** and publish (or `firebase deploy --only firestore:rules`).
 4. `npm install && npm run dev`
 
@@ -35,4 +35,4 @@ Confirmation links show up at `http://127.0.0.1:9099/emulator/v1/projects/demo-s
 
 ## Deploy (Vercel)
 
-Import the repo in Vercel (framework: Vite) and add the `VITE_FIREBASE_*` variables. Then add the Vercel domain under **Firebase → Authentication → Settings → Authorized domains**.
+Import the repo in Vercel (framework: Vite). No env vars are needed for the built-in project.
