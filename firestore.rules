@@ -1,0 +1,21 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Username → email lookup so you can sign in with your username.
+    // Anyone may look up a single username; nobody can list them.
+    match /usernames/{name} {
+      allow get: if true;
+      allow list: if false;
+      allow create: if request.auth != null
+        && request.resource.data.uid == request.auth.uid
+        && name.matches('^[a-z0-9_.]{3,20}$');
+      allow update, delete: if false;
+    }
+
+    // Everything else lives under your own user document.
+    match /users/{uid}/{document=**} {
+      allow read, write: if request.auth != null && request.auth.uid == uid
+        && request.auth.token.email_verified == true;
+    }
+  }
+}

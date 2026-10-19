@@ -1,0 +1,91 @@
+@import 'tailwindcss';
+
+@theme {
+  --color-ink: #0b0d2a;
+  --color-panel: #121641;
+  --color-panel-2: #181d52;
+  --color-line: #262c6b;
+  --color-muted: #8b90c9;
+  --color-text: #e8eaff;
+  --color-purple: #c084fc;
+  --color-cyan: #22d3ee;
+  --color-teal: #2dd4bf;
+  --color-lime: #a3e635;
+  --color-yellow: #facc15;
+  --color-pink: #f472b6;
+  --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  background:
+    radial-gradient(1200px 600px at 20% -10%, #1d1f6b55, transparent 60%),
+    radial-gradient(900px 500px at 110% 10%, #0e5a7a33, transparent 60%), var(--color-ink);
+  background-attachment: fixed;
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.panel {
+  background: linear-gradient(180deg, #151a4acc, #10143bcc);
+  border: 1px solid var(--color-line);
+  border-radius: 1rem;
+  box-shadow:
+    0 0 0 1px #ffffff05 inset,
+    0 10px 30px -12px #00000080;
+}
+
+.glow {
+  box-shadow: 0 0 12px -2px var(--glow, #22d3ee);
+}
+
+.input {
+  width: 100%;
+  background: #0d1036;
+  border: 1px solid var(--color-line);
+  border-radius: 0.75rem;
+  padding: 0.65rem 0.85rem;
+  color: var(--color-text);
+  outline: none;
+}
+.input:focus {
+  border-color: var(--color-cyan);
+  box-shadow: 0 0 0 3px #22d3ee33;
+}
+
+.btn {
+  border-radius: 0.75rem;
+  padding: 0.6rem 1rem;
+  font-weight: 600;
+  background: linear-gradient(90deg, #22d3ee, #a78bfa);
+  color: #0b0d2a;
+  cursor: pointer;
+}
+.btn:disabled {
+  opacity: 0.5;
+}
+.btn-ghost {
+  border-radius: 0.75rem;
+  padding: 0.5rem 0.85rem;
+  border: 1px solid var(--color-line);
+  color: var(--color-text);
+  background: #ffffff08;
+  cursor: pointer;
+}
+.btn-ghost:hover {
+  background: #ffffff12;
+}
+
+.scroll-x {
+  overflow-x: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #2a3080 transparent;
+}
