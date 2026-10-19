@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useData } from '../lib/data'
-import { WEEKDAY_LONG, addDays, shortDate, todayKey, weekKeys } from '../lib/dates'
-import { XP, summarizeDay, taskXp } from '../lib/scoring'
+import { WEEKDAY_LONG, addDays, dayHref, shortDate, todayKey, weekKeys } from '../lib/dates'
+import { HISTORY_START, XP, summarizeDay, taskXp } from '../lib/scoring'
 import { DAY_COLORS, NavArrows, Ring, StatCard } from '../components/ui'
 import { TaskList } from '../components/TaskList'
 
@@ -97,7 +97,13 @@ export function WeekView() {
                 style={isToday ? { borderColor: color, boxShadow: `0 0 24px -8px ${color}` } : undefined}
               >
                 <div className="text-center">
-                  <div className="text-lg font-semibold">{WEEKDAY_LONG[i]}</div>
+                  {c.key <= today && c.key >= HISTORY_START ? (
+                    <a href={dayHref(c.key)} className="text-lg font-semibold hover:underline" title="Open this day">
+                      {WEEKDAY_LONG[i]}
+                    </a>
+                  ) : (
+                    <div className="text-lg font-semibold">{WEEKDAY_LONG[i]}</div>
+                  )}
                   <div className="text-xs text-muted">
                     {shortDate(c.key)}
                     {isToday && <span style={{ color }}> · Today</span>}

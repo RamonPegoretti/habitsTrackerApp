@@ -1,7 +1,8 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
-import { addDoc, collection, deleteDoc, doc, getDoc, onSnapshot, setDoc, updateDoc, writeBatch } from 'firebase/firestore'
+import { addDoc, collection, deleteDoc, doc, getDoc, getDocs, onSnapshot, setDoc, updateDoc, writeBatch } from 'firebase/firestore'
 import { db } from './firebase'
 import { todayKey } from './dates'
+import { HISTORY_START } from './scoring'
 import { STARTER_HABITS } from './seed'
 import type { DayDoc, Habit, Journal, Task } from './types'
 import type { Days } from './scoring'
@@ -19,12 +20,23 @@ interface DataValue {
   addTask: (key: string, title: string, big: boolean) => Promise<void>
   toggleTask: (t: Task) => Promise<void>
   deleteTask: (t: Task) => Promise<void>
-  saveHabit: (h: Omit<Habit, 'id' | 'order' | 'start' | 'end'> & { id?: string }) => Promise<void>
+  saveHabit: (h: Omit<Habit, 'id' | 'order' | 'end'> & { id?: string }) => Promise<void>
   removeHabit: (h: Habit) => Promise<void>
   moveHabit: (h: Habit, dir: -1 | 1) => Promise<void>
 }
 
 const DataContext = createContext<DataValue | null>(null)
+
+/** One-time move: habits created before past-day editing existed count back to HISTORY_START. */
+async function backfillStarts(uid: string) {
+  const snap = await getDocs(collection(db, 'users', uid, 'habits'))
+  const batch = writeBatch(db)
+  snap.docs.forEach((d) => {
+    if ((d.data().start as string) > HISTORY_START) batch.update(d.ref, { start: HISTORY_START })
+  })
+  batch.set(doc(db, 'users', uid), { historyFrom: HISTORY_START }, { merge: true })
+  await batch.commit()
+}
 
 // Guards against seeding twice when the effect runs twice (React StrictMode).
 const seeding = new Set<string>()
@@ -40,13 +52,16 @@ export function DataProvider({ uid, username, children }: { uid: string; usernam
     if (!seeding.has(uid)) {
       seeding.add(uid)
       getDoc(userRef).then(async (snap) => {
-        if (snap.exists() && snap.data().seeded) return
+        if (snap.exists() && snap.data().seeded) {
+          if (!snap.data().historyFrom) await backfillStarts(uid)
+          return
+        }
         const batch = writeBatch(db)
-        const start = todayKey()
+        const start = HISTORY_START
         STARTER_HABITS.forEach((h, i) => {
           batch.set(doc(collection(db, 'users', uid, 'habits')), { ...h, order: i, start, end: null })
         })
-        batch.set(userRef, { username, seeded: true, createdAt: Date.now() }, { merge: true })
+        batch.set(userRef, { username, seeded: true, historyFrom: HISTORY_START, createdAt: Date.now() }, { merge: true })
         await batch.commit()
       })
     }
@@ -99,7 +114,7 @@ export function DataProvider({ uid, username, children }: { uid: string; usernam
           await updateDoc(doc(db, 'users', uid, 'habits', id), fields)
         } else {
           const order = allHabits.reduce((m, h) => Math.max(m, h.order), -1) + 1
-          await addDoc(collection(db, 'users', uid, 'habits'), { ...fields, order, start: today, end: null })
+          await addDoc(collection(db, 'users', uid, 'habits'), { ...fields, order, end: null })
         }
       },
       async removeHabit(h) {

@@ -1,17 +1,17 @@
 import { useState } from 'react'
 import { useData } from '../lib/data'
-import { WEEKDAY_SHORT } from '../lib/dates'
+import { WEEKDAY_SHORT, todayKey } from '../lib/dates'
+import { HISTORY_START } from '../lib/scoring'
 import type { Habit } from '../lib/types'
 
-type Draft = { id?: string; name: string; emoji: string; days: number[]; weeklyTarget: number | null }
-
-const EMPTY: Draft = { name: '', emoji: '✅', days: [0, 1, 2, 3, 4, 5, 6], weeklyTarget: null }
+type Draft = { id?: string; name: string; emoji: string; days: number[]; weeklyTarget: number | null; start: string }
 
 export function HabitsView() {
   const { habits, saveHabit, removeHabit, moveHabit } = useData()
   const [draft, setDraft] = useState<Draft | null>(null)
 
-  const edit = (h: Habit) => setDraft({ id: h.id, name: h.name, emoji: h.emoji, days: h.days, weeklyTarget: h.weeklyTarget })
+  const edit = (h: Habit) =>
+    setDraft({ id: h.id, name: h.name, emoji: h.emoji, days: h.days, weeklyTarget: h.weeklyTarget, start: h.start })
 
   return (
     <div className="space-y-4">
@@ -20,7 +20,10 @@ export function HabitsView() {
           <div className="text-xs uppercase tracking-widest text-muted">Settings</div>
           <h1 className="text-3xl font-bold">My Habits</h1>
         </div>
-        <button className="btn" onClick={() => setDraft({ ...EMPTY })}>
+        <button
+          className="btn"
+          onClick={() => setDraft({ name: '', emoji: '✅', days: [0, 1, 2, 3, 4, 5, 6], weeklyTarget: null, start: todayKey() })}
+        >
           + New habit
         </button>
       </div>
@@ -141,6 +144,17 @@ function HabitForm({ draft, onCancel, onSave }: { draft: Draft; onCancel: () => 
           ))}
         </div>
       </div>
+      <label className="block w-48">
+        <span className="mb-1 block text-xs text-muted">Counts from</span>
+        <input
+          type="date"
+          className="input"
+          min={HISTORY_START}
+          max={todayKey()}
+          value={d.start}
+          onChange={(e) => e.target.value && setD({ ...d, start: e.target.value < HISTORY_START ? HISTORY_START : e.target.value })}
+        />
+      </label>
       <label className="flex flex-wrap items-center gap-2 text-sm">
         <input
           type="checkbox"
